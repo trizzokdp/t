@@ -29,9 +29,10 @@ jobs:
       - name: Print GitHub variables
         run: |
           echo "Branch or tag ref is ${{ github.ref }}"
-          echo "VITE_APP_TEST is ${{ env.VITE_APP_TEST }}"
+          echo "VITE_APP_TEST is ${{ secrets.VITE_APP_TEST }}"
           echo "VITE_APP_BASE is ${{ env.VITE_APP_BASE }}"
           echo "VITE_APP_BASE is ${{ vars.VITE_APP_BASE }}"
+          echo "VITE_APP_BASE is ${{ secrets.VITE_APP_BASE }}"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
