@@ -69,6 +69,7 @@ jobs:
 
       - name: Deploy to netlify
         uses: South-Paw/action-netlify-cli@v2
+        id: netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
