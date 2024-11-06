@@ -1,4 +1,4 @@
-name: ci flow
+name: integration flow
 
 on:
   pull_request:
