@@ -74,4 +74,15 @@ jobs:
           NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
         with:
           args: deploy --dir=dist --prod
-          secrets: '["NETLIFY_AUTH_TOKEN", "NETLIFY_SITE_ID"]'
+        # You can parse the `NETLIFY_OUTPUT` output with `fromJson` function for the following information:
+     
+      - name: Parse NETLIFY_OUTPUT JSON
+        run: |
+          echo "The URL where the logs from the deploy can be found"
+          echo "${{ fromJson(steps.netlify.outputs.NETLIFY_OUTPUT).logs }}"
+          echo ""
+          echo "the URL of the draft site that Netlify provides"
+          echo "${{ fromJson(steps.netlify.outputs.NETLIFY_OUTPUT).deploy_url }}"
+          echo ""
+          echo "the URL of the "real" site, set only if `--prod` was passed"
+          echo "${{ fromJson(steps.netlify.outputs.NETLIFY_OUTPUT).url }}"
