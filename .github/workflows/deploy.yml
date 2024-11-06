@@ -1,0 +1,81 @@
+name: deploy flow
+
+on:
+  push:
+    branches:
+      - 'dev'
+      - 'staging'
+      - 'main'
+      
+env:
+  environment: ${{ github.ref == 'refs/heads/main' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'dev' }}
+  NODE_OPTIONS: --max-old-space-size=32768
+
+jobs:    
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Extract version
+        id: extract_version
+        uses: Saionaro/extract-package-version@v1.1.1
+
+      - name: Print version
+        run: echo ${{ steps.extract_version.outputs.version }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
+          run_install: false
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.16.0
+          cache: pnpm
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      
+      
+      - name: Install pnpm
+        run: |
+          pnpm install --frozen-lockfile
+
+      
+      - name: Load and apply environment variables
+        run: bash scripts/cd/env.sh
+        shell: bash
+
+      - name: build
+        run: |
+          pnpm build
+        env:
+          VITE_APP_TEST: ${{ vars.VITE_APP_TEST }}
+          VITE_APP_BASE: ${{ vars.VITE_APP_BASE }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+
+
+      - name: Deploy to netlify
+        uses: netlify/actions/cli@master
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+        with:
+          args: deploy --dir=dist --prod
+          secrets: '["NETLIFY_AUTH_TOKEN", "NETLIFY_SITE_ID"]'
