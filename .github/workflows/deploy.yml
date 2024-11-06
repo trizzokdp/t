@@ -74,7 +74,7 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
         with:
-          args: deploy --dir=dist --prod
+          args: deploy --json --dir=dist --prod
         # You can parse the `NETLIFY_OUTPUT` output with `fromJson` function for the following information:
      
       - name: Parse NETLIFY_OUTPUT JSON
