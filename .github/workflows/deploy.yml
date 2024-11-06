@@ -26,6 +26,12 @@ jobs:
 
       - name: Print version
         run: echo ${{ steps.extract_version.outputs.version }}
+      - name: Print GitHub variables
+        run: |
+          echo "Branch or tag ref is ${{ github.ref }}"
+          echo "VITE_APP_TEST is ${{ env.VITE_APP_TEST }}"
+          echo "VITE_APP_BASE is ${{ env.VITE_APP_BASE }}"
+          echo "VITE_APP_BASE is ${{ vars.VITE_APP_BASE }}"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -56,11 +62,6 @@ jobs:
       - name: Install pnpm
         run: |
           pnpm install --frozen-lockfile
-
-      
-      - name: Load and apply environment variables
-        run: bash scripts/cd/env.sh
-        shell: bash
 
       - name: build
         run: |
