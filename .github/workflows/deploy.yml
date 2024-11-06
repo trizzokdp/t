@@ -8,12 +8,13 @@ on:
       - 'main'
       
 env:
-  environment: ${{ github.ref == 'refs/heads/main' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'dev' }}
-  NODE_OPTIONS: --max-old-space-size=32768
+   NODE_OPTIONS: --max-old-space-size=32768
 
 jobs:    
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'dev' }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,12 +30,11 @@ jobs:
       - name: Print GitHub variables
         run: |
           echo "Branch or tag ref is ${{ github.ref }}"
-          echo "VITE_APP_TEST is $API_KEY"
+          echo "VITE_APP_TEST is ${{ secrets.VITE_APP_TEST }}"
           echo "VITE_APP_BASE is ${{ env.VITE_APP_TEST }}"
           echo "VITE_APP_BASE is ${{ vars.VITE_APP_TEST }}"
           echo "VITE_APP_BASE is  $VITE_APP_BASE "
-        env:
-          API_KEY: ${{ secrets[format('_{0}_VITE_APP_TEST', environment)] }}
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
@@ -69,16 +69,16 @@ jobs:
         run: |
           pnpm build
         env:
-          VITE_APP_TEST: ${{ vars.VITE_APP_TEST }}
-          VITE_APP_BASE: ${{ vars.VITE_APP_BASE }}
-          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+          VITE_APP_TEST: ${{ secrets.VITE_APP_TEST }}
+          VITE_APP_BASE: ${{ secrets.VITE_APP_BASE }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
 
       - name: Deploy to netlify
         uses: netlify/actions/cli@master
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         with:
           args: deploy --dir=dist --prod
           secrets: '["NETLIFY_AUTH_TOKEN", "NETLIFY_SITE_ID"]'
