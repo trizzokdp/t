@@ -2,10 +2,9 @@ name: ci flow
 
 on:
   pull_request:
-    branches:
-      - 'dev'
-      - 'staging'
-      - 'main'
+    types:
+      - opened
+      - synchronize
 
 jobs:
   integration:
