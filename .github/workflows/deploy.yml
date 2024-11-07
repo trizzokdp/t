@@ -3,10 +3,17 @@ name: deploy flow
 on:
   push:
     branches:
-      - 'dev'
-      - 'staging'
-      - 'main'
-      
+      - dev
+      - staging
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Select the environment to deploy'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
 env:
    NODE_OPTIONS: --max-old-space-size=32768
 
@@ -21,31 +28,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
-      - name: Extract version
-        id: extract_version
-        uses: Saionaro/extract-package-version@v1.1.1
-
-      - name: Print version
-        run: echo ${{ steps.extract_version.outputs.version }}
-
-      - name: Print GitHub variables
-        run: |
-          echo "Branch or tag ref is ${{ github.ref }}"
-          echo "VITE_APP_TEST is ${{ vars.VITE_APP_TEST }}"
-          echo "VITE_APP_BASE is ${{ vars.VITE_APP_BASE }}"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: latest
+          version: 9.12.3
           run_install: false
-          
+            
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20.16.0
           cache: pnpm
+          
+      - name: Print GitHub variables
+        run: |
+          echo "Branch or tag ref is ${{ github.ref }}"
+          echo "VITE_APP_TEST is ${{ vars.VITE_APP_TEST }}"
+          echo "VITE_APP_BASE is ${{ vars.VITE_APP_BASE }}"
 
       - name: Get pnpm store directory
         shell: bash
@@ -74,10 +74,22 @@ jobs:
 
 
       - name: Deploy to netlify
-        uses: netlify/actions/cli@master
+        uses: South-Paw/action-netlify-cli@v2
+        id: netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
         with:
-          args: deploy --dir=dist --prod
-          secrets: '["NETLIFY_AUTH_TOKEN", "NETLIFY_SITE_ID"]'
+          args: deploy --json --dir=dist --prod
+
+      # You can parse the `NETLIFY_OUTPUT` output with `fromJson` function for the following information:
+      - name: Parse NETLIFY_OUTPUT JSON
+        run: |
+          echo "The URL where the logs from the deploy can be found"
+          echo "${{ fromJson(steps.netlify.outputs.NETLIFY_OUTPUT).logs }}"
+          echo ""
+          echo "the URL of the draft site that Netlify provides"
+          echo "${{ fromJson(steps.netlify.outputs.NETLIFY_OUTPUT).deploy_url }}"
+          echo ""
+          echo "the URL of the "real" site, set only if `--prod` was passed"
+          echo "${{ fromJson(steps.netlify.outputs.NETLIFY_OUTPUT).url }}"
