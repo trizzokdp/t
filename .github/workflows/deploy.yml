@@ -68,9 +68,6 @@ jobs:
       - name: build
         run: |
           pnpm build
-        env:
-          VITE_APP_TEST: ${{ vars.VITE_APP_TEST }}
-          VITE_APP_BASE: ${{ vars.VITE_APP_BASE }}
 
 
       - name: Deploy to netlify
